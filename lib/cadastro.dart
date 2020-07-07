@@ -5,33 +5,27 @@ import 'package:whatsapp/home.dart';
 import 'package:whatsapp/login.dart';
 import 'package:whatsapp/model/usuario.dart';
 
-
 class Cadastro extends StatefulWidget {
   @override
   _CadastroState createState() => _CadastroState();
 }
 
 class _CadastroState extends State<Cadastro> {
-
   //Controladores
   TextEditingController _controllerNome = TextEditingController(text: "");
   TextEditingController _controllerEmail = TextEditingController(text: "");
   TextEditingController _controllerSenha = TextEditingController(text: "");
   String _mensagemErro = "";
 
-  _validarCampos(){
-
+  _validarCampos() {
     //Recupera dados dos campos
     String nome = _controllerNome.text;
     String email = _controllerEmail.text;
     String senha = _controllerSenha.text;
 
-    if( nome.isNotEmpty ){
-
-      if( email.isNotEmpty && email.contains("@") ){
-
-        if( senha.isNotEmpty && senha.length > 6 ){
-
+    if (nome.isNotEmpty) {
+      if (email.isNotEmpty && email.contains("@")) {
+        if (senha.isNotEmpty && senha.length > 6) {
           setState(() {
             _mensagemErro = "";
           });
@@ -41,60 +35,47 @@ class _CadastroState extends State<Cadastro> {
           usuario.email = email;
           usuario.senha = senha;
 
-          _cadastrarUsuario( usuario );
-
-
-        }else{
+          _cadastrarUsuario(usuario);
+        } else {
           setState(() {
             _mensagemErro = "Preencha a senha! digite mais de 6 caracteres";
           });
         }
-
-      }else{
+      } else {
         setState(() {
           _mensagemErro = "Preencha o E-mail utilizando @";
         });
       }
-
-    }else{
+    } else {
       setState(() {
         _mensagemErro = "Preencha o Nome";
       });
     }
-
   }
 
-  _cadastrarUsuario( Usuario usuario ){
-
+  _cadastrarUsuario(Usuario usuario) {
     FirebaseAuth auth = FirebaseAuth.instance;
 
-    auth.createUserWithEmailAndPassword(
-        email: usuario.email,
-        password: usuario.senha
-    ).then((firebaseUser){
-
+    auth
+        .createUserWithEmailAndPassword(
+            email: usuario.email, password: usuario.senha)
+        .then((firebaseUser) {
       //Salvar dados do usuário
       Firestore db = Firestore.instance;
 
-      db.collection("usuarios")
-      .document( firebaseUser.user.uid )
-      .setData( usuario.toMap() );
+      db
+          .collection("usuarios")
+          .document(firebaseUser.user.uid)
+          .setData(usuario.toMap());
 
-      Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) => Home()
-          )
-      );
-
-    }).catchError((error){
-      print("erro app: " + error.toString() );
+      Navigator.pushNamedAndRemoveUntil(context, "/home", (route) => false);
+    }).catchError((error) {
+      print("erro app: " + error.toString());
       setState(() {
-        _mensagemErro = "Erro ao cadastrar usuário, verifique os campos e tente novamente!";
+        _mensagemErro =
+            "Erro ao cadastrar usuário, verifique os campos e tente novamente!";
       });
-
     });
-
   }
 
   @override
@@ -176,16 +157,12 @@ class _CadastroState extends State<Cadastro> {
                           borderRadius: BorderRadius.circular(32)),
                       onPressed: () {
                         _validarCampos();
-                      }
-                      ),
+                      }),
                 ),
                 Center(
                   child: Text(
                     _mensagemErro,
-                    style: TextStyle(
-                        color: Colors.red,
-                        fontSize: 20
-                    ),
+                    style: TextStyle(color: Colors.red, fontSize: 20),
                   ),
                 )
               ],

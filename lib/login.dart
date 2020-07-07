@@ -43,12 +43,14 @@ class _LoginState extends State<Login> {
 
   _logarUsuario(Usuario usuario) {
     FirebaseAuth auth = FirebaseAuth.instance;
-    
+
     auth
         .signInWithEmailAndPassword(
             email: usuario.email, password: usuario.senha)
         .then((firebaseUser) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => Home()));
+         Navigator.pushReplacementNamed(
+        context,"/home"
+      );
     }).catchError((error) {
       setState(() {
         _mensagemErro =
@@ -59,11 +61,12 @@ class _LoginState extends State<Login> {
 
   Future _verificarUsuarioLogado() async {
     FirebaseAuth auth = FirebaseAuth.instance;
-   // auth.signOut();
+    // auth.signOut();
     FirebaseUser usuarioLogado = await auth.currentUser();
     if (usuarioLogado != null) {
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => Home()));
+   Navigator.pushReplacementNamed(
+        context,"/home"
+      );
     }
   }
 
@@ -145,12 +148,9 @@ class _LoginState extends State<Login> {
                       style: TextStyle(color: Colors.white),
                     ),
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => Cadastro(),
-                        ),
-                      );
+                      Navigator.pushReplacementNamed(
+        context,"/cadastro"
+      );
                     },
                   ),
                 ),
