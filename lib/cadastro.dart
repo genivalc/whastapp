@@ -1,4 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:whatsapp/home.dart';
+import 'package:whatsapp/login.dart';
+import 'package:whatsapp/model/usuario.dart';
+
 
 class Cadastro extends StatefulWidget {
   @override
@@ -6,45 +12,90 @@ class Cadastro extends StatefulWidget {
 }
 
 class _CadastroState extends State<Cadastro> {
+
   //Controladores
-  TextEditingController _controllerNome = TextEditingController();
-  TextEditingController _controllerEmail = TextEditingController();
-  TextEditingController _controllerSenha = TextEditingController();
+  TextEditingController _controllerNome = TextEditingController(text: "");
+  TextEditingController _controllerEmail = TextEditingController(text: "");
+  TextEditingController _controllerSenha = TextEditingController(text: "");
   String _mensagemErro = "";
 
-  _validarCampos() {
+  _validarCampos(){
+
     //Recupera dados dos campos
     String nome = _controllerNome.text;
     String email = _controllerEmail.text;
     String senha = _controllerSenha.text;
 
-    if (nome.isNotEmpty) {
-      if (email.isNotEmpty && email.contains("@")) {
-        if (senha.isNotEmpty) {
+    if( nome.isNotEmpty ){
+
+      if( email.isNotEmpty && email.contains("@") ){
+
+        if( senha.isNotEmpty && senha.length > 6 ){
+
           setState(() {
             _mensagemErro = "";
           });
-          _cadastrarUsuario();
-        } else {
+
+          Usuario usuario = Usuario();
+          usuario.nome = nome;
+          usuario.email = email;
+          usuario.senha = senha;
+
+          _cadastrarUsuario( usuario );
+
+
+        }else{
           setState(() {
-            _mensagemErro = "Preencha o senha";
+            _mensagemErro = "Preencha a senha! digite mais de 6 caracteres";
           });
         }
-      } else {
+
+      }else{
         setState(() {
-          _mensagemErro = "Preencha o Email ultilizando @";
+          _mensagemErro = "Preencha o E-mail utilizando @";
         });
       }
-    } else {
+
+    }else{
       setState(() {
         _mensagemErro = "Preencha o Nome";
       });
     }
+
   }
 
-_cadastrarUsuario(){
-  
-}
+  _cadastrarUsuario( Usuario usuario ){
+
+    FirebaseAuth auth = FirebaseAuth.instance;
+
+    auth.createUserWithEmailAndPassword(
+        email: usuario.email,
+        password: usuario.senha
+    ).then((firebaseUser){
+
+      //Salvar dados do usuário
+      Firestore db = Firestore.instance;
+
+      db.collection("usuarios")
+      .document( firebaseUser.user.uid )
+      .setData( usuario.toMap() );
+
+      Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) => Home()
+          )
+      );
+
+    }).catchError((error){
+      print("erro app: " + error.toString() );
+      setState(() {
+        _mensagemErro = "Erro ao cadastrar usuário, verifique os campos e tente novamente!";
+      });
+
+    });
+
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,11 +110,11 @@ _cadastrarUsuario(){
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+              children: <Widget>[
                 Padding(
                   padding: EdgeInsets.only(bottom: 32),
                   child: Image.asset(
-                    "images/usuario.png",
+                    "imagens/usuario.png",
                     width: 200,
                     height: 150,
                   ),
@@ -81,7 +132,7 @@ _cadastrarUsuario(){
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(50))),
+                            borderRadius: BorderRadius.circular(32))),
                   ),
                 ),
                 Padding(
@@ -96,7 +147,7 @@ _cadastrarUsuario(){
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(50))),
+                            borderRadius: BorderRadius.circular(32))),
                   ),
                 ),
                 TextField(
@@ -105,14 +156,12 @@ _cadastrarUsuario(){
                   keyboardType: TextInputType.text,
                   style: TextStyle(fontSize: 20),
                   decoration: InputDecoration(
-                    contentPadding: EdgeInsets.fromLTRB(32, 16, 32, 16),
-                    hintText: "Senha",
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(50),
-                    ),
-                  ),
+                      contentPadding: EdgeInsets.fromLTRB(32, 16, 32, 16),
+                      hintText: "Senha",
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(32))),
                 ),
                 Padding(
                   padding: EdgeInsets.only(top: 16, bottom: 10),
@@ -124,17 +173,21 @@ _cadastrarUsuario(){
                       color: Colors.green,
                       padding: EdgeInsets.fromLTRB(32, 16, 32, 16),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(50)),
+                          borderRadius: BorderRadius.circular(32)),
                       onPressed: () {
                         _validarCampos();
-                      }),
+                      }
+                      ),
                 ),
                 Center(
                   child: Text(
                     _mensagemErro,
-                    style: TextStyle(color: Colors.red, fontSize: 20),
+                    style: TextStyle(
+                        color: Colors.red,
+                        fontSize: 20
+                    ),
                   ),
-                ),
+                )
               ],
             ),
           ),
