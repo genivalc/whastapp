@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:whatsapp/model/conversa.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:whatsapp/model/usuario.dart';
 
@@ -13,15 +12,9 @@ class _ContatosState extends State<Contatos> {
   String _idUsuarioLogado;
   String _emailUsuarioLogado;
 
-  _recuperarDadosUsuario() async {
-    FirebaseAuth auth = FirebaseAuth.instance;
-    FirebaseUser usuarioLogado = await auth.currentUser();
-    _idUsuarioLogado = usuarioLogado.uid;
-    _emailUsuarioLogado = usuarioLogado.email;
-  }
-
   Future<List<Usuario>> _recuperarContatos() async {
     Firestore db = Firestore.instance;
+
     QuerySnapshot querySnapshot =
         await db.collection("usuarios").getDocuments();
 
@@ -31,13 +24,22 @@ class _ContatosState extends State<Contatos> {
       if (dados["email"] == _emailUsuarioLogado) continue;
 
       Usuario usuario = Usuario();
+      usuario.idUsuario = item.documentID;
       usuario.email = dados["email"];
-      usuario.email = dados["nome"];
-      usuario.email = dados["urlImagem"];
+      usuario.nome = dados["nome"];
+      usuario.urlImagem = dados["urlImagem"];
 
       listaUsuarios.add(usuario);
     }
+
     return listaUsuarios;
+  }
+
+  _recuperarDadosUsuario() async {
+    FirebaseAuth auth = FirebaseAuth.instance;
+    FirebaseUser usuarioLogado = await auth.currentUser();
+    _idUsuarioLogado = usuarioLogado.uid;
+    _emailUsuarioLogado = usuarioLogado.email;
   }
 
   @override
@@ -56,7 +58,7 @@ class _ContatosState extends State<Contatos> {
           case ConnectionState.waiting:
             return Center(
               child: Column(
-                children: [
+                children: <Widget>[
                   Text("Carregando contatos"),
                   CircularProgressIndicator()
                 ],
@@ -73,7 +75,8 @@ class _ContatosState extends State<Contatos> {
 
                   return ListTile(
                     onTap: () {
-                      Navigator.pushNamed(context, "/mensagens", arguments: usuario);
+                      Navigator.pushNamed(context, "/mensagens",
+                          arguments: usuario);
                     },
                     contentPadding: EdgeInsets.fromLTRB(16, 8, 16, 8),
                     leading: CircleAvatar(

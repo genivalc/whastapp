@@ -7,23 +7,22 @@ import 'package:whatsapp/mensagens.dart';
 import 'home.dart';
 
 class RouteGenerator {
-  static Route<dynamic> generaRoute(RouteSettings settings) {
+  static Route<dynamic> generateRoute(RouteSettings settings) {
     final args = settings.arguments;
 
     switch (settings.name) {
       case "/":
-        return MaterialPageRoute(builder: (context) => Login());
+        return MaterialPageRoute(builder: (_) => Login());
       case "/login":
-        return MaterialPageRoute(builder: (context) => Login());
+        return MaterialPageRoute(builder: (_) => Login());
       case "/cadastro":
-        return MaterialPageRoute(builder: (context) => Cadastro());
+        return MaterialPageRoute(builder: (_) => Cadastro());
       case "/home":
-        return MaterialPageRoute(builder: (context) => Home());
+        return MaterialPageRoute(builder: (_) => Home());
       case "/configuracoes":
-        return MaterialPageRoute(builder: (context) => Configuracoes());
+        return MaterialPageRoute(builder: (_) => Configuracoes());
       case "/mensagens":
-        return MaterialPageRoute(builder: (context) => Mensagens(args));
-      //"/mensagens"
+        return MaterialPageRoute(builder: (_) => Mensagens(args));
       default:
         _erroRota();
     }

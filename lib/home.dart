@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:whatsapp/login.dart';
 import 'package:whatsapp/pages/contatos.dart';
 import 'package:whatsapp/pages/conversas.dart';
 import 'package:whatsapp/pages/status.dart';
@@ -11,19 +10,37 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
-  TabController _tabcontroller;
+  TabController _tabController;
   List<String> itensMenu = ["Configurações", "Deslogar"];
+  String _emailUsuario = "";
+
+  Future _recuperarDadosUsuario() async {
+    FirebaseAuth auth = FirebaseAuth.instance;
+    FirebaseUser usuarioLogado = await auth.currentUser();
+
+    setState(() {
+      _emailUsuario = usuarioLogado.email;
+    });
+  }
+
+  Future _verificarUsuarioLogado() async {
+    FirebaseAuth auth = FirebaseAuth.instance;
+    //auth.signOut();
+
+    FirebaseUser usuarioLogado = await auth.currentUser();
+
+    if (usuarioLogado == null) {
+      Navigator.pushReplacementNamed(context, "/login");
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _tabcontroller = TabController(length: 3, vsync: this);
-  }
+    _verificarUsuarioLogado();
+    _recuperarDadosUsuario();
 
-  @override
-  void dispose() {
-    super.dispose();
-    _tabcontroller.dispose();
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   _escolhaMenuItem(String itemEscolhido) {
@@ -35,8 +52,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         _deslogarUsuario();
         break;
     }
-
-    print(itemEscolhido);
+    //print("Item escolhido: " + itemEscolhido );
   }
 
   _deslogarUsuario() async {
@@ -50,16 +66,13 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          "WhatsApp",
-          textAlign: TextAlign.center,
-        ),
+        title: Text("WhatsApp"),
         bottom: TabBar(
           indicatorWeight: 4,
-          indicatorColor: Colors.white,
           labelStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          controller: _tabcontroller,
-          tabs: [
+          controller: _tabController,
+          indicatorColor: Colors.white,
+          tabs: <Widget>[
             Tab(
               text: "Conversas",
             ),
@@ -68,22 +81,25 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             ),
             Tab(
               text: "Contatos",
-            ),
+            )
           ],
         ),
-        actions: [
+        actions: <Widget>[
           PopupMenuButton<String>(
             onSelected: _escolhaMenuItem,
             itemBuilder: (context) {
               return itensMenu.map((String item) {
-                return PopupMenuItem<String>(value: item, child: Text(item));
+                return PopupMenuItem<String>(
+                  value: item,
+                  child: Text(item),
+                );
               }).toList();
             },
-          ),
+          )
         ],
       ),
       body: TabBarView(
-        controller: _tabcontroller,
+        controller: _tabController,
         children: [
           Conversas(),
           Status(),

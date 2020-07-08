@@ -11,47 +11,125 @@ class Configuracoes extends StatefulWidget {
 }
 
 class _ConfiguracoesState extends State<Configuracoes> {
-  TextEditingController _controllerNome = TextEditingController(text: "");
+ TextEditingController _controllerNome = TextEditingController();
   File _imagem;
   String _idUsuarioLogado;
   bool _subindoImagem = false;
   String _urlImagemRecuperada;
 
   Future _recuperarImagem(String origemImagem) async {
+
     File imagemSelecionada;
-    switch (origemImagem) {
-      case "camera":
-        imagemSelecionada =
-            await ImagePicker.pickImage(source: ImageSource.camera);
+    switch( origemImagem ){
+      case "camera" :
+        imagemSelecionada = await ImagePicker.pickImage(source: ImageSource.camera);
         break;
-      case "galeria":
-        await ImagePicker.pickImage(source: ImageSource.gallery);
+      case "galeria" :
+        imagemSelecionada = await ImagePicker.pickImage(source: ImageSource.gallery);
         break;
     }
 
     setState(() {
       _imagem = imagemSelecionada;
-      if (_imagem != null) {
+      if( _imagem != null ){
         _subindoImagem = true;
         _uploadImagem();
       }
     });
+
+  }
+
+  Future _uploadImagem() async {
+
+    FirebaseStorage storage = FirebaseStorage.instance;
+    StorageReference pastaRaiz = storage.ref();
+    StorageReference arquivo = pastaRaiz
+      .child("perfil")
+      .child(_idUsuarioLogado + ".jpg");
+
+    //Upload da imagem
+    StorageUploadTask task = arquivo.putFile(_imagem);
+
+    //Controlar progresso do upload
+    task.events.listen((StorageTaskEvent storageEvent){
+
+      if( storageEvent.type == StorageTaskEventType.progress ){
+        setState(() {
+          _subindoImagem = true;
+        });
+      }else if( storageEvent.type == StorageTaskEventType.success ){
+        setState(() {
+          _subindoImagem = false;
+        });
+      }
+
+    });
+
+    //Recuperar url da imagem
+    task.onComplete.then((StorageTaskSnapshot snapshot){
+      _recuperarUrlImagem(snapshot);
+    });
+
+  }
+
+  Future _recuperarUrlImagem(StorageTaskSnapshot snapshot) async {
+
+    String url = await snapshot.ref.getDownloadURL();
+    _atualizarUrlImagemFirestore( url );
+
+    setState(() {
+      _urlImagemRecuperada = url;
+    });
+
+  }
+
+  _atualizarNomeFirestore(){
+
+    String nome = _controllerNome.text;
+    Firestore db = Firestore.instance;
+
+    Map<String, dynamic> dadosAtualizar = {
+      "nome" : nome
+    };
+
+    db.collection("usuarios")
+        .document(_idUsuarioLogado)
+        .updateData( dadosAtualizar );
+
+  }
+
+  _atualizarUrlImagemFirestore(String url){
+
+    Firestore db = Firestore.instance;
+
+    Map<String, dynamic> dadosAtualizar = {
+      "urlImagem" : url
+    };
+    
+    db.collection("usuarios")
+    .document(_idUsuarioLogado)
+    .updateData( dadosAtualizar );
+
   }
 
   _recuperarDadosUsuario() async {
+
     FirebaseAuth auth = FirebaseAuth.instance;
     FirebaseUser usuarioLogado = await auth.currentUser();
     _idUsuarioLogado = usuarioLogado.uid;
 
     Firestore db = Firestore.instance;
-    DocumentSnapshot snapshot =
-        await db.collection("usuarios").document(_idUsuarioLogado).get();
+    DocumentSnapshot snapshot = await db.collection("usuarios")
+      .document( _idUsuarioLogado )
+      .get();
+
     Map<String, dynamic> dados = snapshot.data;
     _controllerNome.text = dados["nome"];
 
-    if (dados["urlImagem"] != null) {
+    if( dados["urlImagem"] != null ){
       _urlImagemRecuperada = dados["urlImagem"];
     }
+
   }
 
   @override
@@ -60,74 +138,16 @@ class _ConfiguracoesState extends State<Configuracoes> {
     _recuperarDadosUsuario();
   }
 
-  Future _uploadImagem() async {
-    FirebaseStorage storage = FirebaseStorage.instance;
-    StorageReference pastaRaiz = storage.ref();
-    StorageReference arquivo =
-        pastaRaiz.child("perfil").child("_${_idUsuarioLogado}.jpg");
-    //Upload da imagem
-    StorageUploadTask task = arquivo.putFile(_imagem);
-    //Controlar progresso do upload
-    task.events.listen((StorageTaskEvent storageEvent) {
-      if (storageEvent.type == StorageTaskEventType.progress) {
-        setState(() {
-          _subindoImagem = true;
-        });
-      } else if (storageEvent.type == StorageTaskEventType.success) {
-        setState(() {
-          _subindoImagem = false;
-        });
-      }
-    });
-    task.onComplete.then((StorageTaskSnapshot snapshot) {
-      _recuperarUrlImagem(snapshot);
-    });
-  }
-
-  Future _recuperarUrlImagem(StorageTaskSnapshot snapshot) async {
-    String url = await snapshot.ref.getDownloadURL();
-    _atualizarUrlImagemFirestore(url);
-
-    setState(() {
-      _urlImagemRecuperada = url;
-    });
-  }
-
-  _atualizarUrlImagemFirestore(String url) {
-    Firestore db = Firestore.instance;
-
-    Map<String, dynamic> dadosAtualizar = {"urlImagem": url};
-
-    db
-        .collection("usuarios")
-        .document(_idUsuarioLogado)
-        .updateData(dadosAtualizar);
-  }
-
-  _atualizarNomeFirestore() {
-    String nome = _controllerNome.text;
-    Firestore db = Firestore.instance;
-
-    Map<String, dynamic> dadosAtualizar = {"nome": nome};
-
-    db
-        .collection("usuarios")
-        .document(_idUsuarioLogado)
-        .updateData(dadosAtualizar);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Configurações"),
-      ),
+      appBar: AppBar(title: Text("Configurações"),),
       body: Container(
         padding: EdgeInsets.all(16),
         child: Center(
           child: SingleChildScrollView(
             child: Column(
-              children: [
+              children: <Widget>[
                 Container(
                   padding: EdgeInsets.all(16),
                   child: _subindoImagem
@@ -135,26 +155,28 @@ class _ConfiguracoesState extends State<Configuracoes> {
                       : Container(),
                 ),
                 CircleAvatar(
-                    radius: 100,
-                    backgroundColor: Colors.grey,
-                    backgroundImage: _urlImagemRecuperada != null
-                        ? NetworkImage(_urlImagemRecuperada)
-                        : null),
+                  radius: 100,
+                  backgroundColor: Colors.grey,
+                  backgroundImage:
+                  _urlImagemRecuperada != null
+                      ? NetworkImage(_urlImagemRecuperada)
+                      : null
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+                  children: <Widget>[
                     FlatButton(
-                      onPressed: () {
+                      child: Text("Câmera"),
+                      onPressed: (){
                         _recuperarImagem("camera");
                       },
-                      child: Text("Câmera"),
                     ),
                     FlatButton(
-                      onPressed: () {
+                      child: Text("Galeria"),
+                      onPressed: (){
                         _recuperarImagem("galeria");
                       },
-                      child: Text("Galeria"),
-                    ),
+                    )
                   ],
                 ),
                 Padding(
@@ -164,6 +186,9 @@ class _ConfiguracoesState extends State<Configuracoes> {
                     autofocus: true,
                     keyboardType: TextInputType.text,
                     style: TextStyle(fontSize: 20),
+                    /*onChanged: (texto){
+                      _atualizarNomeFirestore(texto);
+                    },*/
                     decoration: InputDecoration(
                         contentPadding: EdgeInsets.fromLTRB(32, 16, 32, 16),
                         hintText: "Nome",
@@ -186,8 +211,9 @@ class _ConfiguracoesState extends State<Configuracoes> {
                           borderRadius: BorderRadius.circular(32)),
                       onPressed: () {
                         _atualizarNomeFirestore();
-                      }),
-                ),
+                      }
+                  ),
+                )
               ],
             ),
           ),
