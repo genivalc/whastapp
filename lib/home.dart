@@ -29,7 +29,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   _escolhaMenuItem(String itemEscolhido) {
     switch (itemEscolhido) {
       case "Configurações":
-        print("Configurações");
+        Navigator.pushNamed(context, "/configuracoes");
         break;
       case "Deslogar":
         _deslogarUsuario();
@@ -43,7 +43,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     FirebaseAuth auth = FirebaseAuth.instance;
     await auth.signOut();
 
-    Navigator.pushReplacementNamed(context, "/home");
+    Navigator.pushReplacementNamed(context, "/login");
   }
 
   @override

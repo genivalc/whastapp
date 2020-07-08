@@ -95,7 +95,7 @@ class _CadastroState extends State<Cadastro> {
                 Padding(
                   padding: EdgeInsets.only(bottom: 32),
                   child: Image.asset(
-                    "imagens/usuario.png",
+                    "images/usuario.png",
                     width: 200,
                     height: 150,
                   ),

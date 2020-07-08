@@ -32,7 +32,7 @@ dependencies:
   firebase_auth: ^0.16.1 #autenticação
   firebase_storage: ^3.1.6 #armazenamento de arquivos
   cloud_firestore: ^0.13.7 #Banco de dados
-  
+  image_picker: ^0.6.7+4 #usar camera e galeria do celular nativamente 
 
 dev_dependencies:
   flutter_test:
