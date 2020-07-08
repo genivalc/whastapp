@@ -1,5 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:whatsapp/model/conversa.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:whatsapp/model/usuario.dart';
 
 class Contatos extends StatefulWidget {
   @override
@@ -7,41 +10,88 @@ class Contatos extends StatefulWidget {
 }
 
 class _ContatosState extends State<Contatos> {
+  String _idUsuarioLogado;
+  String _emailUsuarioLogado;
 
-   List<Conversa> listaConversas = [
-    Conversa("Genival Neto", "Olá tudo bem",
-        "https://firebasestorage.googleapis.com/v0/b/whatsapp-828da.appspot.com/o/perfil%2FWhatsApp%20Image%202020-05-10%20at%208.12.37%20PM.jpeg?alt=media&token=deddedca-4152-4709-8345-59d30407c2b6"),
-    Conversa("Genival", "Olá tudo bem",
-        "https://firebasestorage.googleapis.com/v0/b/whatsapp-828da.appspot.com/o/perfil%2FWhatsApp%20Image%202020-05-10%20at%208.07.59%20PM.jpeg?alt=media&token=a6613645-d12f-4c16-ab9f-50af233995f4"),
-  ];
+  _recuperarDadosUsuario() async {
+    FirebaseAuth auth = FirebaseAuth.instance;
+    FirebaseUser usuarioLogado = await auth.currentUser();
+    _idUsuarioLogado = usuarioLogado.uid;
+    _emailUsuarioLogado = usuarioLogado.email;
+  }
+
+  Future<List<Usuario>> _recuperarContatos() async {
+    Firestore db = Firestore.instance;
+    QuerySnapshot querySnapshot =
+        await db.collection("usuarios").getDocuments();
+
+    List<Usuario> listaUsuarios = List();
+    for (DocumentSnapshot item in querySnapshot.documents) {
+      var dados = item.data;
+      if (dados["email"] == _emailUsuarioLogado) continue;
+
+      Usuario usuario = Usuario();
+      usuario.email = dados["email"];
+      usuario.email = dados["nome"];
+      usuario.email = dados["urlImagem"];
+
+      listaUsuarios.add(usuario);
+    }
+    return listaUsuarios;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _recuperarDadosUsuario();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-        itemCount: listaConversas.length,
-        itemBuilder: (context, indice){
-
-          Conversa conversa = listaConversas[indice];
-
-          return ListTile(
-            contentPadding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-            leading: CircleAvatar(
-              
-              maxRadius: 30,
-              backgroundColor: Colors.grey,
-              backgroundImage: NetworkImage( conversa.caminhoFoto ),
-            ),
-            title: Text(
-              conversa.nome,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16
+    return FutureBuilder<List<Usuario>>(
+      future: _recuperarContatos(),
+      builder: (context, snapshot) {
+        switch (snapshot.connectionState) {
+          case ConnectionState.none:
+          case ConnectionState.waiting:
+            return Center(
+              child: Column(
+                children: [
+                  Text("Carregando contatos"),
+                  CircularProgressIndicator()
+                ],
               ),
-            ),
+            );
+            break;
+          case ConnectionState.active:
+          case ConnectionState.done:
+            return ListView.builder(
+                itemCount: snapshot.data.length,
+                itemBuilder: (_, indice) {
+                  List<Usuario> listaItens = snapshot.data;
+                  Usuario usuario = listaItens[indice];
 
-          );
-
+                  return ListTile(
+                    onTap: () {
+                      Navigator.pushNamed(context, "/mensagens", arguments: usuario);
+                    },
+                    contentPadding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    leading: CircleAvatar(
+                        maxRadius: 30,
+                        backgroundColor: Colors.grey,
+                        backgroundImage: usuario.urlImagem != null
+                            ? NetworkImage(usuario.urlImagem)
+                            : null),
+                    title: Text(
+                      usuario.nome,
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  );
+                });
+            break;
         }
+      },
     );
   }
 }
