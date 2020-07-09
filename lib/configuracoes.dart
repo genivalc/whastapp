@@ -11,7 +11,8 @@ class Configuracoes extends StatefulWidget {
 }
 
 class _ConfiguracoesState extends State<Configuracoes> {
- TextEditingController _controllerNome = TextEditingController();
+
+  TextEditingController _controllerNome = TextEditingController();
   File _imagem;
   String _idUsuarioLogado;
   bool _subindoImagem = false;

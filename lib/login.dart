@@ -1,8 +1,7 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:whatsapp/cadastro.dart';
-
-import 'model/usuario.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'Cadastro.dart';
+import 'model/Usuario.dart';
 
 class Login extends StatefulWidget {
   @override
@@ -10,11 +9,12 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  TextEditingController _controllerEmail = TextEditingController(text: "");
-  TextEditingController _controllerSenha = TextEditingController(text: "");
+
+  TextEditingController _controllerEmail = TextEditingController(text: "jamilton@gmail.com");
+  TextEditingController _controllerSenha = TextEditingController(text: "1234567");
   String _mensagemErro = "";
 
- _validarCampos(){
+  _validarCampos(){
 
     //Recupera dados dos campos
     String email = _controllerEmail.text;

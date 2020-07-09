@@ -1,14 +1,15 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:whatsapp/model/usuario.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:whatsapp/model/Usuario.dart';
 
-class Contatos extends StatefulWidget {
+class AbaContatos extends StatefulWidget {
   @override
-  _ContatosState createState() => _ContatosState();
+  _AbaContatosState createState() => _AbaContatosState();
 }
 
-class _ContatosState extends State<Contatos> {
+class _AbaContatosState extends State<AbaContatos> {
+
   String _idUsuarioLogado;
   String _emailUsuarioLogado;
 
@@ -20,8 +21,9 @@ class _ContatosState extends State<Contatos> {
 
     List<Usuario> listaUsuarios = List();
     for (DocumentSnapshot item in querySnapshot.documents) {
+
       var dados = item.data;
-      if (dados["email"] == _emailUsuarioLogado) continue;
+      if( dados["email"] == _emailUsuarioLogado ) continue;
 
       Usuario usuario = Usuario();
       usuario.idUsuario = item.documentID;
@@ -36,10 +38,12 @@ class _ContatosState extends State<Contatos> {
   }
 
   _recuperarDadosUsuario() async {
+
     FirebaseAuth auth = FirebaseAuth.instance;
     FirebaseUser usuarioLogado = await auth.currentUser();
     _idUsuarioLogado = usuarioLogado.uid;
     _emailUsuarioLogado = usuarioLogado.email;
+
   }
 
   @override
@@ -70,13 +74,17 @@ class _ContatosState extends State<Contatos> {
             return ListView.builder(
                 itemCount: snapshot.data.length,
                 itemBuilder: (_, indice) {
+
                   List<Usuario> listaItens = snapshot.data;
                   Usuario usuario = listaItens[indice];
 
                   return ListTile(
-                    onTap: () {
-                      Navigator.pushNamed(context, "/mensagens",
-                          arguments: usuario);
+                    onTap: (){
+                      Navigator.pushNamed(
+                          context,
+                          "/mensagens",
+                        arguments: usuario
+                      );
                     },
                     contentPadding: EdgeInsets.fromLTRB(16, 8, 16, 8),
                     leading: CircleAvatar(
@@ -94,7 +102,11 @@ class _ContatosState extends State<Contatos> {
                 });
             break;
         }
+
       },
+      
+    
     );
+  
   }
 }

@@ -1,7 +1,7 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:whatsapp/model/usuario.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'model/Usuario.dart';
 
 class Cadastro extends StatefulWidget {
   @override
@@ -9,13 +9,14 @@ class Cadastro extends StatefulWidget {
 }
 
 class _CadastroState extends State<Cadastro> {
+
   //Controladores
-  TextEditingController _controllerNome = TextEditingController(text: "");
-  TextEditingController _controllerEmail = TextEditingController(text: "");
-  TextEditingController _controllerSenha = TextEditingController(text: "");
+  TextEditingController _controllerNome = TextEditingController(text: "Jamilton Damasceno");
+  TextEditingController _controllerEmail = TextEditingController(text: "jamilton@gmail.com");
+  TextEditingController _controllerSenha = TextEditingController(text: "1234567");
   String _mensagemErro = "";
 
- _validarCampos(){
+  _validarCampos(){
 
     //Recupera dados dos campos
     String nome = _controllerNome.text;
@@ -76,7 +77,9 @@ class _CadastroState extends State<Cadastro> {
       .document( firebaseUser.user.uid )
       .setData( usuario.toMap() );
 
-      Navigator.pushNamedAndRemoveUntil(context, "/home", (_)=>false);
+      Navigator.pushNamedAndRemoveUntil(
+          context, "/home", (_)=>false
+      );
 
     }).catchError((error){
       print("erro app: " + error.toString() );
